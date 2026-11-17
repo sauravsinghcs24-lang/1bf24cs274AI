@@ -1,0 +1,88 @@
+
+# First Order Logic - Forward Chaining
+
+# Initial Knowledge Base (KB)
+KB = {
+    ("American", "Robert"),
+    ("Missile", "T1"),
+    ("Owns", "A", "T1"),
+    ("Enemy", "A", "America")
+}
+
+# Forward Chaining Rules
+def forward_chaining(KB):
+
+    new_facts = set()
+
+    while True:
+
+        new_facts.clear()
+
+        # Rule 1: Missile(x) -> Weapon(x)
+        for fact in KB:
+            if fact[0] == "Missile":
+                new_facts.add(("Weapon", fact[1]))
+
+        # Rule 2: Enemy(x, America) -> Hostile(x)
+        for fact in KB:
+            if fact[0] == "Enemy" and fact[2] == "America":
+                new_facts.add(("Hostile", fact[1]))
+
+        # Rule 3: Missile(x) AND Owns(A,x)
+        #         -> Sells(Robert,x,A)
+        for missile in KB:
+            if missile[0] == "Missile":
+                x = missile[1]
+
+                if ("Owns", "A", x) in KB:
+                    new_facts.add(("Sells", "Robert", x, "A"))
+
+        # Rule 4: American(p) AND Weapon(q)
+        # AND Sells(p,q,r) AND Hostile(r)
+        # -> Criminal(p)
+
+        for american in KB:
+            if american[0] == "American":
+
+                p = american[1]
+
+                for weapon in KB:
+                    if weapon[0] == "Weapon":
+
+                        q = weapon[1]
+
+                        for sells in KB:
+                            if sells[0] == "Sells" and sells[1] == p and sells[2] == q:
+
+                                r = sells[3]
+
+                                if ("Hostile", r) in KB:
+                                    new_facts.add(("Criminal", p))
+
+        # Stop if no new facts are generated
+        new_facts = new_facts - KB
+
+        if not new_facts:
+            break
+
+        KB.update(new_facts)
+
+    return KB
+
+
+# Run Forward Chaining
+result = forward_chaining(KB)
+
+# Display all facts
+print("Final Knowledge Base:")
+
+for fact in sorted(result):
+    print(fact)
+
+# Check the query
+query = ("Criminal", "Robert")
+
+if query in result:
+    print("\nGoal Proved: Robert is Criminal")
+else:
+    print("\nGoal Not Proved")
